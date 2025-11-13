@@ -20,8 +20,7 @@ const PostSchema = new mongoose.Schema(
     },
     slug: {
       type: String,
-      required: true,
-      unique: true,
+      index: true, // Index but NOT unique
     },
     excerpt: {
       type: String,
@@ -66,23 +65,25 @@ const PostSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Create slug from title before saving
+// Create slug from title before saving (optional - not required)
 PostSchema.pre('save', function (next) {
-  if (!this.isModified('title')) {
+  if (!this.isModified('title') || this.slug) {
     return next();
   }
   
+  // Generate slug only if not already set
   this.slug = this.title
     .toLowerCase()
     .replace(/[^\w ]+/g, '')
-    .replace(/ +/g, '-');
+    .replace(/ +/g, '-')
+    + '-' + Date.now(); // Add timestamp to ensure uniqueness
     
   next();
 });
 
 // Virtual for post URL
 PostSchema.virtual('url').get(function () {
-  return `/posts/${this.slug}`;
+  return `/posts/${this.slug || this._id}`;
 });
 
 // Method to add a comment

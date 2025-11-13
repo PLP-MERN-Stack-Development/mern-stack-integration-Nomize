@@ -1,44 +1,58 @@
 // server.js - Main server file for the MERN blog application
 
-// Import required modules
 const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
 const dotenv = require('dotenv');
+const cors = require('cors');
 const path = require('path');
-
-// Import routes
-const postRoutes = require('./routes/posts');
-const categoryRoutes = require('./routes/categories');
-const authRoutes = require('./routes/auth');
 
 // Load environment variables
 dotenv.config();
+const PORT = process.env.PORT || 5000;
+
+// Connect to MongoDB
+const connectDB = require('./config/db');
+
+const startServer = async () => {
+  // Connect to DB first
+  await connectDB();
+};
 
 // Initialize Express app
 const app = express();
-const PORT = process.env.PORT || 5000;
+
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: process.env.ALLOWED_ORIGIN,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  credentials: true
+}));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Serve uploaded files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Log requests in development mode
+// Log requests in development
 if (process.env.NODE_ENV === 'development') {
   app.use((req, res, next) => {
     console.log(`${req.method} ${req.url}`);
     next();
   });
-}
+};
+
+
+// Import routes
+const authRoutes = require('./routes/auth');
+const categoryRoutes = require('./routes/categories');
+const postRoutes = require('./routes/posts');
+
 
 // API routes
-app.use('/api/posts', postRoutes);
-app.use('/api/categories', categoryRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/categories', categoryRoutes);
+app.use('/api/posts', postRoutes);
 
 // Root route
 app.get('/', (req, res) => {
@@ -47,32 +61,43 @@ app.get('/', (req, res) => {
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(err.statusCode || 500).json({
+  console.error('Error:', err);
+  
+  let statusCode = err.statusCode || 500;
+  let message = err.message || 'Server Error';
+  
+  // Handle Mongoose validation errors
+  if (err.name === 'ValidationError') {
+    statusCode = 422;
+    message = Object.values(err.errors).map(e => e.message).join(', ');
+  }
+  
+  // Handle Mongoose duplicate key error
+  if (err.code === 11000) {
+    statusCode = 400;
+    const field = Object.keys(err.keyPattern)[0];
+    message = `${field} already exists`;
+  }
+  
+  res.status(statusCode).json({
     success: false,
-    error: err.message || 'Server Error',
+    error: message,
+    details: err.errors || undefined
   });
 });
-
-// Connect to MongoDB and start server
-mongoose
-  .connect(process.env.MONGODB_URI)
-  .then(() => {
-    console.log('Connected to MongoDB');
-    app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
-    });
-  })
-  .catch((err) => {
-    console.error('Failed to connect to MongoDB', err);
-    process.exit(1);
-  });
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (err) => {
   console.error('Unhandled Promise Rejection:', err);
-  // Close server & exit process
   process.exit(1);
 });
 
-module.exports = app; 
+// Start the server - Connect to DB first, then listen
+startServer().then(() => {
+  app.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`);
+  });
+}).catch((err) => {
+  console.error('Failed to start server:', err);
+  process.exit(1);
+});

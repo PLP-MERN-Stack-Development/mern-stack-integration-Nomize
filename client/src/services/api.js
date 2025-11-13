@@ -4,7 +4,7 @@ import axios from 'axios';
 
 // Create axios instance with base URL
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
+  baseURL: import.meta.env.VITE_API_URL,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -47,43 +47,47 @@ export const postService = {
       url += `&category=${category}`;
     }
     const response = await api.get(url);
-    return response.data;
+    // Server responds with { success: true, data: posts }
+    return response.data && response.data.data ? response.data.data : response.data;
   },
 
   // Get a single post by ID or slug
   getPost: async (idOrSlug) => {
     const response = await api.get(`/posts/${idOrSlug}`);
-    return response.data;
+    return response.data && response.data.data ? response.data.data : response.data;
   },
 
-  // Create a new post
+  // Create a new post (supports image upload)
   createPost: async (postData) => {
+    // Don't set Content-Type for FormData - let axios/browser handle it
+    // The axios instance will automatically add the Authorization header
     const response = await api.post('/posts', postData);
-    return response.data;
+    return response.data && response.data.data ? response.data.data : response.data;
   },
 
-  // Update an existing post
+  // Update an existing post (supports re-uploading featured image)
   updatePost: async (id, postData) => {
+    // Don't set Content-Type for FormData - let axios/browser handle it
     const response = await api.put(`/posts/${id}`, postData);
-    return response.data;
+    return response.data && response.data.data ? response.data.data : response.data;
   },
 
   // Delete a post
   deletePost: async (id) => {
     const response = await api.delete(`/posts/${id}`);
-    return response.data;
+    return response.data && response.data.data ? response.data.data : response.data;
   },
 
   // Add a comment to a post
   addComment: async (postId, commentData) => {
     const response = await api.post(`/posts/${postId}/comments`, commentData);
-    return response.data;
+    return response.data && response.data.data ? response.data.data : response.data;
   },
 
   // Search posts
   searchPosts: async (query) => {
     const response = await api.get(`/posts/search?q=${query}`);
-    return response.data;
+    return response.data && response.data.data ? response.data.data : response.data;
   },
 };
 
@@ -92,13 +96,31 @@ export const categoryService = {
   // Get all categories
   getAllCategories: async () => {
     const response = await api.get('/categories');
-    return response.data;
+    return response.data && response.data.data ? response.data.data : response.data;
+  },
+
+  // Get a single category
+  getCategory: async (id) => {
+    const response = await api.get(`/categories/${id}`);
+    return response.data && response.data.data ? response.data.data : response.data;
   },
 
   // Create a new category
   createCategory: async (categoryData) => {
     const response = await api.post('/categories', categoryData);
-    return response.data;
+    return response.data && response.data.data ? response.data.data : response.data;
+  },
+
+  // Update a category
+  updateCategory: async (id, categoryData) => {
+    const response = await api.put(`/categories/${id}`, categoryData);
+    return response.data && response.data.data ? response.data.data : response.data;
+  },
+
+  // Delete a category
+  deleteCategory: async (id) => {
+    const response = await api.delete(`/categories/${id}`);
+    return response.data && response.data.data ? response.data.data : response.data;
   },
 };
 
@@ -133,4 +155,4 @@ export const authService = {
   },
 };
 
-export default api; 
+export default api;

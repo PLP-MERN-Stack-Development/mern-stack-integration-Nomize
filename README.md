@@ -1,78 +1,156 @@
-# MERN Stack Integration Assignment
+# MyBlog (MERN)
 
-This assignment focuses on building a full-stack MERN (MongoDB, Express.js, React.js, Node.js) application that demonstrates seamless integration between front-end and back-end components.
+A MERN blog application built for the Week 4 assignment. It demonstrates full-stack integration with authentication, file uploads, category management, and CRUD operations for posts.
 
-## Assignment Overview
+## Features
 
-You will build a blog application with the following features:
-1. RESTful API with Express.js and MongoDB
-2. React front-end with component architecture
-3. Full CRUD functionality for blog posts
-4. User authentication and authorization
-5. Advanced features like image uploads and comments
+- User authentication (register / login)
+- Create, edit, delete posts (with featured image uploads)
+- Categories management and filtering
+- Post list and single post views
+- Pagination and basic search/filter support
+- Backend comments support (frontend UI optional)
 
-## Project Structure
+## Quickstart
 
-```
-mern-blog/
-├── client/                 # React front-end
-│   ├── public/             # Static files
-│   ├── src/                # React source code
-│   │   ├── components/     # Reusable components
-│   │   ├── pages/          # Page components
-│   │   ├── hooks/          # Custom React hooks
-│   │   ├── services/       # API services
-│   │   ├── context/        # React context providers
-│   │   └── App.jsx         # Main application component
-│   └── package.json        # Client dependencies
-├── server/                 # Express.js back-end
-│   ├── config/             # Configuration files
-│   ├── controllers/        # Route controllers
-│   ├── models/             # Mongoose models
-│   ├── routes/             # API routes
-│   ├── middleware/         # Custom middleware
-│   ├── utils/              # Utility functions
-│   ├── server.js           # Main server file
-│   └── package.json        # Server dependencies
-└── README.md               # Project documentation
+Prerequisites: Node.js (v18+), MongoDB (local or Atlas)
+
+1. Server
+
+```powershell
+cd server
+cp .env.example .env   # fill in MONGODB_URI and JWT_SECRET
+npm install
+npm run dev
 ```
 
-## Getting Started
+2. Client
 
-1. Accept the GitHub Classroom assignment invitation
-2. Clone your personal repository that was created by GitHub Classroom
-3. Follow the setup instructions in the `Week4-Assignment.md` file
-4. Complete the tasks outlined in the assignment
+```powershell
+cd client
+cp .env.example .env   # set VITE_API_URL if needed
+npm install
+npm run dev
+```
 
-## Files Included
+Open the client at `http://localhost:5173`.
 
-- `Week4-Assignment.md`: Detailed assignment instructions
-- Starter code for both client and server:
-  - Basic project structure
-  - Configuration files
-  - Sample models and components
+## API Endpoints
 
-## Requirements
+Base URL: `http://localhost:5000/api`
 
-- Node.js (v18 or higher)
-- MongoDB (local installation or Atlas account)
-- npm or yarn
-- Git
+Auth
 
-## Submission
+- `POST /auth/register` — register { name, email, password }
+- `POST /auth/login` — login { email, password }
+- `GET /auth/me` — get current user (protected)
 
-Your work will be automatically submitted when you push to your GitHub Classroom repository. Make sure to:
+Posts
 
-1. Complete both the client and server portions of the application
-2. Implement all required API endpoints
-3. Create the necessary React components and hooks
-4. Document your API and setup process in the README.md
-5. Include screenshots of your working application
+- `GET /posts` — list posts (supports `?page=1&limit=10&category=<id>`)
+- `GET /posts/:id` — single post
+- `POST /posts` — create post (protected, FormData)
+- `PUT /posts/:id` — update post (protected)
+- `DELETE /posts/:id` — delete post (protected)
 
-## Resources
+Categories
 
-- [MongoDB Documentation](https://docs.mongodb.com/)
-- [Express.js Documentation](https://expressjs.com/)
-- [React Documentation](https://react.dev/)
-- [Node.js Documentation](https://nodejs.org/en/docs/)
-- [Mongoose Documentation](https://mongoosejs.com/docs/) 
+- `GET /categories` — list categories
+- `POST /categories` — create category (protected)
+
+## Seeding
+
+- `npm run seed` — ensure default categories exist
+- Assignment Checklist (Week4)
+- Task 1 — Project setup: implemented
+- Task 2 — Back-end API: implemented
+- Task 3 — Front-end: implemented
+- Task 4 — Integration: implemented (some UX improvements possible)
+- Task 5 — Advanced features: partially implemented (authentication, uploads, pagination done; comments UI optional)
+
+## Notes & Troubleshooting
+
+- Ensure `ALLOWED_ORIGIN` in `server/.env` matches client origin to avoid CORS errors (e.g. `http://localhost:5173`).
+
+## Project File Structure
+
+Top-level layout and what each folder/file represents:
+
+```
+mern-stack-integration-Nomize/
+├─ client/                    # React front-end (Vite)
+│  ├─ public/                 # Static assets (index.html, icons)
+│  ├─ src/
+│  │  ├─ assets/              # Images and static client assets
+│  │  ├─ components/          # Small reusable UI components (Navbar, Footer, PostCard, Loader)
+│  │  ├─ context/             # React Context providers (Auth)
+│  │  ├─ hooks/               # Custom hooks (useApi)
+│  │  ├─ pages/               # Page components (Home, PostForm, Dashboard, SinglePost, About, Contact)
+│  │  ├─ services/            # API service wrappers using axios (postService, categoryService, authService)
+│  │  ├─ main.jsx             # App bootstrap and router
+│  │  └─ App.jsx              # Route definitions and top-level layout
+│  └─ package.json
+├─ server/                    # Express back-end
+│  ├─ config/                 # DB connection helpers (db.js)
+│  ├─ controllers/            # Route handlers for posts, categories, auth
+│  ├─ models/                 # Mongoose models (User, Post, Category)
+│  ├─ routes/                 # Express routers
+│  ├─ middleware/             # Auth, upload, and error handling middleware
+│  ├─ scripts/                # Utility scripts (seedCategories, seedPosts, fixIndexes, resetPassword)
+│  ├─ uploads/                # Uploaded files (images) served at `/uploads`
+│  ├─ server.js               # Express app + route mounting
+│  └─ package.json
+└─ README.md
+```
+
+### Notable files
+
+- `server/.env.example` and `client/.env.example`: templates for environment variables
+- `server/scripts/seedCategories.js`: creates default categories used in the app
+- `server/scripts/seedPosts.js`: optional example posts for testing (can be omitted in production)
+- `client/src/services/api.js`: central axios instance and API wrappers (normalizes backend responses)
+- `client/src/pages/PostForm.jsx`: create/edit UI for posts; supports image upload and category creation
+
+## Further improvements (suggestions)
+
+- Add a confirmation modal for deletes in the UI to avoid accidental deletions.
+- Implement optimistic UI updates for create/update/delete to improve responsiveness.
+- Add a search input on the Home page that uses `postService.searchPosts`.
+- Implement a comments UI under `SinglePost` (backend already supports comments).
+- Add tests (Jest + React Testing Library) for critical components and API mocks.
+- Add `.env.example` for any CI or deployment steps and document any production build steps.
+
+## Deployment Requirements
+
+To deploy/run the application you need to provide the following environment variables and ensure the API is reachable from your client origin.
+
+- Required server env vars (set these in `server/.env` or your host's config):
+
+  - `MONGODB_URI` — MongoDB connection string (Atlas recommended for production)
+  - `JWT_SECRET` — secret used to sign JWTs
+  - `ALLOWED_ORIGIN` — the client origin (e.g. `https://your-front-end.example`)
+  - `PORT` — optional (defaults to `5000`)
+- Required client env vars (set in `client/.env` or host settings):
+
+  - `VITE_API_URL` — base API URL (e.g. `https://your-backend.example/api`)
+
+API endpoints your deployment must expose (base URL: `<VITE_API_URL>`):
+
+- Auth
+
+  - `POST /auth/register` — register { name, email, password }
+  - `POST /auth/login` — login { email, password }
+  - `GET /auth/me` — get current user (protected)
+- Posts
+
+  - `GET /posts` — list posts (supports `?page=1&limit=10&category=<id>`)
+  - `GET /posts/:id` — single post
+  - `POST /posts` — create post (protected, FormData)
+  - `PUT /posts/:id` — update post (protected)
+  - `DELETE /posts/:id` — delete post (protected)
+- Categories
+
+  - `GET /categories` — list categories
+  - `POST /categories` — create category (protected)
+
+With these env vars and endpoints available, the client can be pointed at the deployed API using `VITE_API_URL` and the blog will function as expected.
